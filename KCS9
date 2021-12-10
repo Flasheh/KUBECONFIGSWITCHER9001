@@ -1,5 +1,14 @@
 #!/bin/bash
 
+# Parse parameters asvariables
+while [ $# -gt 0 ]; do
+    if [[ $1 == *"--"* ]]; then
+        v="${1/--/}"
+        declare $v="${1/--/}"
+    fi
+    shift
+done
+
 PS3="Which config do you want to use? "
 
 rm -rf ~/.kube/config
@@ -16,10 +25,15 @@ do
   fi 
 done
 
-select file in "${selectfiles[@]}"
-do
-  echo "Selected config: $file"
-  KUBECONFIG=$file
+if [[ -z "$fzf" ]]
+then
+  select file in "${selectfiles[@]}"
+  do
+    echo "Selected config: $file"
+    cp ~/.kube/$file ~/.kube/config
+    exit 1
+  done
+else
+  file=$(printf "%s\n" "${selectfiles[@]}" | fzf --ansi --height=50% --reverse --inline-info --border)
   cp ~/.kube/$file ~/.kube/config
-  exit 1
-done
+fi
